@@ -21,6 +21,7 @@ func main() {
 	router := gin.Default()
 
 	router.GET("/feed", handlers.FeedHandler(db, cfg))
+	router.POST("/post", handlers.CreatePostHandler(db, cfg))
 	router.GET("/healthy", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "healthy",
