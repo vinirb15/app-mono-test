@@ -1,4 +1,4 @@
-package helper
+package helpers
 
 import (
 	"crypto/rand"
@@ -11,10 +11,10 @@ import (
 	"github.com/leandro-andrade-candido/auth-service/models"
 )
 
-func GenerateAccessToken(cfg model.Config, u model.User) (string, time.Time, error) {
+func GenerateAccessToken(cfg models.Config, u models.User) (string, time.Time, error) {
 	now := time.Now().UTC()
 	exp := now.Add(cfg.AccessTTL)
-	claims := model.JWTClaims{
+	claims := models.JWTClaims{
 		UserID: u.ID.String(),
 		Email:  u.Email,
 		RegisteredClaims: jwt.RegisteredClaims{

@@ -11,7 +11,7 @@ import (
 	"github.com/leandro-andrade-candido/auth-service/models"
 )
 
-func AuthMiddleware(cfg model.Config) gin.HandlerFunc {
+func AuthMiddleware(cfg models.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		h := c.GetHeader("Authorization")
 		if h == "" {
@@ -25,7 +25,7 @@ func AuthMiddleware(cfg model.Config) gin.HandlerFunc {
 		}
 		tokenStr := strings.TrimPrefix(h, p)
 
-		token, err := jwt.ParseWithClaims(tokenStr, &model.JWTClaims{}, func(t *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenStr, &models.JWTClaims{}, func(t *jwt.Token) (interface{}, error) {
 			if t.Method.Alg() != jwt.SigningMethodHS256.Alg() {
 				return nil, errors.New("alg mismatch")
 			}
@@ -35,7 +35,7 @@ func AuthMiddleware(cfg model.Config) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return
 		}
-		cl := token.Claims.(*model.JWTClaims)
+		cl := token.Claims.(*models.JWTClaims)
 		c.Set("user_id", cl.UserID)
 		c.Set("email", cl.Email)
 		c.Next()

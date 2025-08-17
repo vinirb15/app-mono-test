@@ -8,7 +8,7 @@ import (
 	"github.com/leandro-andrade-candido/auth-service/models"
 )
 
-func LoadConfig() model.Config {
+func LoadConfig() models.Config {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
 		secret = "secret_key"
@@ -37,7 +37,7 @@ func LoadConfig() model.Config {
 			refresh = d
 		}
 	}
-	return model.Config{
+	return models.Config{
 		JWTSecret:  []byte(secret),
 		AccessTTL:  access,
 		RefreshTTL: refresh,

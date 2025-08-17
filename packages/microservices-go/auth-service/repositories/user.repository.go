@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"context"
@@ -9,8 +9,8 @@ import (
 	"github.com/leandro-andrade-candido/auth-service/models"
 )
 
-func FindUserByEmail(ctx context.Context, db *sql.DB, email string) (model.User, error) {
-	var u model.User
+func FindUserByEmail(ctx context.Context, db *sql.DB, email string) (models.User, error) {
+	var u models.User
 	err := db.QueryRowContext(ctx, `
 		SELECT id, email, password_hash, created_at
 		FROM users
@@ -19,8 +19,8 @@ func FindUserByEmail(ctx context.Context, db *sql.DB, email string) (model.User,
 	return u, err
 }
 
-func FindUserByID(ctx context.Context, db *sql.DB, id uuid.UUID) (model.User, error) {
-	var u model.User
+func FindUserByID(ctx context.Context, db *sql.DB, id uuid.UUID) (models.User, error) {
+	var u models.User
 	err := db.QueryRowContext(ctx, `
 		SELECT id, email, password_hash, created_at
 		FROM users

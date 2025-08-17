@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"database/sql"
@@ -16,14 +16,14 @@ import (
 
 func SignupHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req model.SignupReq
+		var req models.SignupReq
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "payload inválido"})
 			return
 		}
 		req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
-		if _, err := repository.FindUserByEmail(c, db, req.Email); err == nil {
+		if _, err := repositories.FindUserByEmail(c, db, req.Email); err == nil {
 			c.JSON(http.StatusConflict, gin.H{"error": "email já cadastrado"})
 			return
 		}

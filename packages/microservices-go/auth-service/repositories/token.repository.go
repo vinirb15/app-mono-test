@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"context"
@@ -11,10 +11,10 @@ import (
 	"github.com/leandro-andrade-candido/auth-service/models"
 )
 
-func CreateRefreshToken(ctx context.Context, db *sql.DB, userID uuid.UUID, ttl time.Duration, parentID *uuid.UUID) (plain string, saved model.RefreshToken, err error) {
-	plain, err = helper.RandomToken(32)
+func CreateRefreshToken(ctx context.Context, db *sql.DB, userID uuid.UUID, ttl time.Duration, parentID *uuid.UUID) (plain string, saved models.RefreshToken, err error) {
+	plain, err = helpers.RandomToken(32)
 	if err != nil {
-		return "", model.RefreshToken{}, err
+		return "", models.RefreshToken{}, err
 	}
 	now := time.Now().UTC()
 	id := uuid.New()
@@ -27,11 +27,11 @@ func CreateRefreshToken(ctx context.Context, db *sql.DB, userID uuid.UUID, ttl t
 	_, err = db.ExecContext(ctx, `
 		INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at, revoked, parent_id)
 		VALUES ($1,$2,$3,$4,$5,false,$6)
-	`, id, userID, helper.HashToken(plain), now.Add(ttl), now, parent)
+	`, id, userID, helpers.HashToken(plain), now.Add(ttl), now, parent)
 	if err != nil {
-		return "", model.RefreshToken{}, err
+		return "", models.RefreshToken{}, err
 	}
-	return plain, model.RefreshToken{
+	return plain, models.RefreshToken{
 		ID:        id,
 		UserID:    userID,
 		TokenHash: "",
@@ -41,9 +41,9 @@ func CreateRefreshToken(ctx context.Context, db *sql.DB, userID uuid.UUID, ttl t
 	}, nil
 }
 
-func GetRefreshByPlain(ctx context.Context, db *sql.DB, plain string) (model.RefreshToken, error) {
-	var rt model.RefreshToken
-	h := helper.HashToken(plain)
+func GetRefreshByPlain(ctx context.Context, db *sql.DB, plain string) (models.RefreshToken, error) {
+	var rt models.RefreshToken
+	h := helpers.HashToken(plain)
 	err := db.QueryRowContext(ctx, `
 		SELECT id, user_id, token_hash, expires_at, created_at, revoked, used_at, parent_id
 		FROM refresh_tokens

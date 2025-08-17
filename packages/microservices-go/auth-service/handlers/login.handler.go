@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"database/sql"
@@ -13,33 +13,33 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func LoginHandler(db *sql.DB, cfg model.Config) gin.HandlerFunc {
+func LoginHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req model.LoginReq
+		var req models.LoginReq
 		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "payload inválido"})
 			return
 		}
 		req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
-		u, err := repository.FindUserByEmail(c, db, req.Email)
+		u, err := repositories.FindUserByEmail(c, db, req.Email)
 		if err != nil || bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "credenciais inválidas"})
 			return
 		}
 
-		access, accessExp, err := helper.GenerateAccessToken(cfg, u)
+		access, accessExp, err := helpers.GenerateAccessToken(cfg, u)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "erro ao gerar access token"})
 			return
 		}
-		plainRefresh, savedRT, err := repository.CreateRefreshToken(c, db, u.ID, cfg.RefreshTTL, nil)
+		plainRefresh, savedRT, err := repositories.CreateRefreshToken(c, db, u.ID, cfg.RefreshTTL, nil)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "erro ao gerar refresh token"})
 			return
 		}
 
-		c.JSON(http.StatusOK, model.TokenResp{
+		c.JSON(http.StatusOK, models.TokenResp{
 			AccessToken:           access,
 			AccessTokenExpiresAt:  accessExp,
 			RefreshToken:          plainRefresh,

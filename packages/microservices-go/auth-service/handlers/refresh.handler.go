@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"database/sql"
@@ -12,7 +12,7 @@ import (
 	"github.com/leandro-andrade-candido/auth-service/repositories"
 )
 
-func RefreshHandler(db *sql.DB, cfg model.Config) gin.HandlerFunc {
+func RefreshHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var body struct {
 			RefreshToken string `json:"refresh_token" binding:"required"`
@@ -22,18 +22,18 @@ func RefreshHandler(db *sql.DB, cfg model.Config) gin.HandlerFunc {
 			return
 		}
 
-		rt, err := repository.GetRefreshByPlain(c, db, body.RefreshToken)
+		rt, err := repositories.GetRefreshByPlain(c, db, body.RefreshToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "refresh inválido"})
 			return
 		}
 		if rt.Revoked {
-			_ = repository.RevokeTokenFamilyOnReuse(c, db, rt.ID)
+			_ = repositories.RevokeTokenFamilyOnReuse(c, db, rt.ID)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "refresh revogado"})
 			return
 		}
 		if rt.UsedAt.Valid {
-			_ = repository.RevokeTokenFamilyOnReuse(c, db, rt.ID)
+			_ = repositories.RevokeTokenFamilyOnReuse(c, db, rt.ID)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "refresh já utilizado"})
 			return
 		}
@@ -42,30 +42,30 @@ func RefreshHandler(db *sql.DB, cfg model.Config) gin.HandlerFunc {
 			return
 		}
 
-		u, err := repository.FindUserByID(c, db, rt.UserID)
+		u, err := repositories.FindUserByID(c, db, rt.UserID)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "usuário inválido"})
 			return
 		}
 
-		access, accessExp, err := helper.GenerateAccessToken(cfg, u)
+		access, accessExp, err := helpers.GenerateAccessToken(cfg, u)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "erro ao gerar access token"})
 			return
 		}
 
-		newPlain, newRT, err := repository.CreateRefreshToken(c, db, u.ID, cfg.RefreshTTL, &rt.ID)
+		newPlain, newRT, err := repositories.CreateRefreshToken(c, db, u.ID, cfg.RefreshTTL, &rt.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "erro ao gerar novo refresh"})
 			return
 		}
 
-		if err := repository.MarkRefreshUsed(c, db, rt.ID); err != nil {
+		if err := repositories.MarkRefreshUsed(c, db, rt.ID); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "erro ao atualizar refresh antigo"})
 			return
 		}
 
-		c.JSON(http.StatusOK, model.TokenResp{
+		c.JSON(http.StatusOK, models.TokenResp{
 			AccessToken:           access,
 			AccessTokenExpiresAt:  accessExp,
 			RefreshToken:          newPlain,

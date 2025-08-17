@@ -23,10 +23,10 @@ func main() {
 	router := gin.Default()
 
 	// Public
-	router.POST("/signup", handler.SignupHandler(db))
-	router.POST("/login", handler.LoginHandler(db, cfg))
-	router.POST("/refresh", handler.RefreshHandler(db, cfg))
-	router.POST("/logout", handler.LogoutHandler(db))
+	router.POST("/signup", handlers.SignupHandler(db))
+	router.POST("/login", handlers.LoginHandler(db, cfg))
+	router.POST("/refresh", handlers.RefreshHandler(db, cfg))
+	router.POST("/logout", handlers.LogoutHandler(db))
 	router.GET("/healthy", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "healthy",
@@ -34,7 +34,7 @@ func main() {
 	})
 
 	// Protected
-	router.GET("/me", middleware.AuthMiddleware(cfg), handler.MeHandler())
+	router.GET("/me", middleware.AuthMiddleware(cfg), handlers.MeHandler())
 
 	log.Printf("listening on %s\n", cfg.ListenAddr)
 	if err := router.Run(cfg.ListenAddr); err != nil {

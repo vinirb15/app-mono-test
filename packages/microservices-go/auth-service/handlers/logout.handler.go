@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"database/sql"
@@ -19,13 +19,13 @@ func LogoutHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		rt, err := repository.GetRefreshByPlain(c, db, body.RefreshToken)
+		rt, err := repositories.GetRefreshByPlain(c, db, body.RefreshToken)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "refresh token não encontrado"})
 			return
 		}
 
-		if err := repository.RevokeTokenFamilyOnReuse(c, db, rt.ID); err != nil {
+		if err := repositories.RevokeTokenFamilyOnReuse(c, db, rt.ID); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "erro ao revogar token"})
 			return
 		}
