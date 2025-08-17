@@ -27,6 +27,11 @@ func main() {
 	router.POST("/login", handler.LoginHandler(db, cfg))
 	router.POST("/refresh", handler.RefreshHandler(db, cfg))
 	router.POST("/logout", handler.LogoutHandler(db))
+	router.GET("/healthy", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"message": "healthy",
+		})
+	})
 
 	// Protected
 	router.GET("/me", middleware.AuthMiddleware(cfg), handler.MeHandler())
