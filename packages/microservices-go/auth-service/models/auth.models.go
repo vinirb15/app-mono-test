@@ -10,6 +10,7 @@ import (
 
 type SignupReq struct {
 	Email    string `json:"email" binding:"required,email"`
+	UserName string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required,min=8"`
 }
 
@@ -34,10 +35,11 @@ type Config struct {
 }
 
 type User struct {
-	ID           uuid.UUID
-	Email        string
-	PasswordHash string
-	CreatedAt    time.Time
+	ID           uuid.UUID `json:"user_id"`
+	Email        string    `json:"email" binding:"required,email"`
+	UserName     string    `json:"username" binding:"required"`
+	PasswordHash string    `json:"-"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type RefreshToken struct {
@@ -52,7 +54,8 @@ type RefreshToken struct {
 }
 
 type JWTClaims struct {
-	UserID string `json:"uid"`
-	Email  string `json:"email"`
+	UserID   string `json:"uid"`
+	Email    string `json:"email"`
+	UserName string `json:"username"`
 	jwt.RegisteredClaims
 }

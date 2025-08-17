@@ -22,6 +22,7 @@ func SignupHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 		req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+		req.UserName = strings.ToLower(strings.TrimSpace(req.UserName))
 
 		if _, err := repositories.FindUserByEmail(c, db, req.Email); err == nil {
 			c.JSON(http.StatusConflict, gin.H{"error": "email já cadastrado"})
@@ -37,9 +38,9 @@ func SignupHandler(db *sql.DB) gin.HandlerFunc {
 		id := uuid.New()
 
 		_, err = db.ExecContext(c, `
-			INSERT INTO users (id, email, password_hash)
-			VALUES ($1,$2,$3)
-		`, id, req.Email, string(hash))
+			INSERT INTO users (id, email, username, password_hash)
+			VALUES ($1,$2,$3,$4)
+		`, id, req.Email, req.UserName, string(hash))
 		if err != nil {
 			log.Printf("Erro ao criar usuário: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "erro ao criar usuário"})

@@ -4,6 +4,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"errors"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -40,4 +42,25 @@ func RandomToken(bytesLen int) (string, error) {
 func HashToken(plain string) string {
 	sum := sha256.Sum256([]byte(plain))
 	return base64.RawURLEncoding.EncodeToString(sum[:])
+}
+
+func GetEmailFromToken(cfg models.Config, tokenString string) (string, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &models.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			log.Printf("unexpected signing method: %v", token.Header["alg"])
+			return nil, errors.New("unexpected signing method")
+		}
+		return cfg.JWTSecret, nil
+	})
+	if err != nil {
+		log.Printf("failed to parse token: %v", err)
+		return "", err
+	}
+
+	if claims, ok := token.Claims.(*models.JWTClaims); ok && token.Valid {
+		return claims.Email, nil
+	}
+
+	log.Println("invalid token or missing email")
+	return "", errors.New("invalid token or missing email")
 }

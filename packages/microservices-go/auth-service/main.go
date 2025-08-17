@@ -34,7 +34,7 @@ func main() {
 	})
 
 	// Protected
-	router.GET("/me", middleware.AuthMiddleware(cfg), handlers.MeHandler())
+	router.GET("/me", middleware.AuthMiddleware(cfg), handlers.MeHandler(db, cfg))
 
 	log.Printf("listening on %s\n", cfg.ListenAddr)
 	if err := router.Run(cfg.ListenAddr); err != nil {
