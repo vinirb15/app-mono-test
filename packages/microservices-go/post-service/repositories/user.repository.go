@@ -1,0 +1,19 @@
+package repositories
+
+import (
+	"context"
+	"database/sql"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/leandro-andrade-candido/post-service/models"
+)
+
+func FindUserByEmail(ctx context.Context, db *sql.DB, email string) (models.User, error) {
+	var u models.User
+	err := db.QueryRowContext(ctx, `
+		SELECT id, email, password_hash, created_at
+		FROM users
+		WHERE email = $1
+	`, email).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.CreatedAt)
+	return u, err
+}
