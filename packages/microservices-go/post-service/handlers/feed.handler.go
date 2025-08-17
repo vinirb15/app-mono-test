@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -39,15 +38,11 @@ func FeedHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
 			return
 		}
 
-		fmt.Println(user)
-
 		feed, err := repositories.FindFeedByUserID(c, db, user.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve feed"})
 			return
 		}
-
-		fmt.Println(feed)
 
 		c.JSON(http.StatusOK, feed)
 	}

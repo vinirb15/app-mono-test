@@ -3,7 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
-	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -43,7 +43,7 @@ func FindFeedByUserID(ctx context.Context, db *sql.DB, userID uuid.UUID) ([]mode
 		ORDER BY p.created_at DESC
 	`, userID)
 	if err != nil {
-		fmt.Println("Error querying feed:", err)
+		log.Println("Error querying feed:", err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -63,7 +63,7 @@ func FindFeedByUserID(ctx context.Context, db *sql.DB, userID uuid.UUID) ([]mode
 			&f.CommentCount,
 		)
 		if err != nil {
-			fmt.Println("Error scanning row:", err)
+			log.Println("Error scanning row:", err)
 			return nil, err
 		}
 		feed = append(feed, f)
