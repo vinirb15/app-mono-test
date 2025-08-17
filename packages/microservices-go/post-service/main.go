@@ -27,8 +27,11 @@ func main() {
 		})
 	})
 	router.GET("/feed", middleware.AuthMiddleware(cfg), handlers.FeedHandler(db, cfg))
+	router.GET("/posts/:postID", handlers.GetPostDetailHandler(db, cfg))
 	router.POST("/posts", middleware.AuthMiddleware(cfg), handlers.CreatePostHandler(db, cfg))
 	router.PUT("/posts/:postID", middleware.AuthMiddleware(cfg), handlers.UpdatePostHandler(db, cfg))
+	router.POST("/likes", middleware.AuthMiddleware(cfg), handlers.CreateLikeHandler(db, cfg))
+	router.POST("/comments", middleware.AuthMiddleware(cfg), handlers.CreateCommentHandler(db, cfg))
 
 	log.Printf("listening on %s\n", cfg.ListenAddr)
 	if err := router.Run(cfg.ListenAddr); err != nil {

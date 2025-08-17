@@ -57,3 +57,99 @@ func UpdatePost(ctx context.Context, db *sql.DB, postID uuid.UUID, userID uuid.U
 
 	return post, nil
 }
+
+func CreateLike(ctx context.Context, db *sql.DB, userID, postID uuid.UUID) (models.Like, error) {
+	like := models.Like{
+		ID:      uuid.New(),
+		UserID:  userID,
+		PostID:  postID,
+		LikedAt: time.Now().UTC(),
+	}
+
+	_, err := db.ExecContext(ctx, `
+		INSERT INTO likes (id, user_id, post_id, liked_at)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (user_id, post_id) DO NOTHING
+	`, like.ID, like.UserID, like.PostID, like.LikedAt)
+	if err != nil {
+		return models.Like{}, err
+	}
+
+	return like, nil
+}
+
+func CreateComment(ctx context.Context, db *sql.DB, userID, postID uuid.UUID, text string) (models.Comment, error) {
+	comment := models.Comment{
+		ID:          uuid.New(),
+		UserID:      userID,
+		PostID:      postID,
+		Text:        text,
+		CommentedAt: time.Now().UTC(),
+	}
+
+	_, err := db.ExecContext(ctx, `
+		INSERT INTO comments (id, user_id, post_id, text, commented_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`, comment.ID, comment.UserID, comment.PostID, comment.Text, comment.CommentedAt)
+	if err != nil {
+		return models.Comment{}, err
+	}
+
+	return comment, nil
+}
+
+func GetPostWithDetails(ctx context.Context, db *sql.DB, postID uuid.UUID) (models.PostDetail, error) {
+	var post models.PostDetail
+
+	// Buscar dados principais do post
+	err := db.QueryRowContext(ctx, `
+		SELECT p.id, p.user_id, u.username, u.email, p.content, p.caption, p.created_at
+		FROM posts p
+		JOIN users u ON p.user_id = u.id
+		WHERE p.id = $1
+	`, postID).Scan(&post.ID, &post.UserID, &post.Username, &post.Email, &post.Content, &post.Caption, &post.CreatedAt)
+	if err != nil {
+		return models.PostDetail{}, err
+	}
+
+	// Buscar likes
+	likeRows, err := db.QueryContext(ctx, `
+		SELECT id, user_id
+		FROM likes
+		WHERE post_id = $1
+	`, postID)
+	if err != nil {
+		return models.PostDetail{}, err
+	}
+	defer likeRows.Close()
+
+	for likeRows.Next() {
+		var l models.LikeResp
+		if err := likeRows.Scan(&l.ID, &l.UserID); err != nil {
+			return models.PostDetail{}, err
+		}
+		post.Likes = append(post.Likes, l)
+	}
+
+	// Buscar comentários
+	commentRows, err := db.QueryContext(ctx, `
+		SELECT id, user_id, text, commented_at
+		FROM comments
+		WHERE post_id = $1
+		ORDER BY commented_at ASC
+	`, postID)
+	if err != nil {
+		return models.PostDetail{}, err
+	}
+	defer commentRows.Close()
+
+	for commentRows.Next() {
+		var c models.CommentResp
+		if err := commentRows.Scan(&c.ID, &c.UserID, &c.Text, &c.CommentedAt); err != nil {
+			return models.PostDetail{}, err
+		}
+		post.Comments = append(post.Comments, c)
+	}
+
+	return post, nil
+}

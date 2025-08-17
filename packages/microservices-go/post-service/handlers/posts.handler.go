@@ -108,3 +108,117 @@ func UpdatePostHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
 		c.JSON(http.StatusOK, post)
 	}
 }
+
+func CreateLikeHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		email, err := helpers.GetEmailFromToken(cfg, token)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+
+		user, err := repositories.FindUserByEmail(c, db, email)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+
+		var req struct {
+			PostID string `json:"post_id" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+			return
+		}
+
+		postID, err := uuid.Parse(req.PostID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+			return
+		}
+
+		like, err := repositories.CreateLike(c, db, user.ID, postID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to like post"})
+			return
+		}
+
+		c.JSON(http.StatusCreated, like)
+	}
+}
+
+func CreateCommentHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		email, err := helpers.GetEmailFromToken(cfg, token)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+
+		user, err := repositories.FindUserByEmail(c, db, email)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+
+		var req struct {
+			PostID string `json:"post_id" binding:"required"`
+			Text   string `json:"text" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+			return
+		}
+
+		postID, err := uuid.Parse(req.PostID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+			return
+		}
+
+		comment, err := repositories.CreateComment(c, db, user.ID, postID, req.Text)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create comment"})
+			return
+		}
+
+		c.JSON(http.StatusCreated, comment)
+	}
+}
+
+func GetPostDetailHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		email, err := helpers.GetEmailFromToken(cfg, token)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+
+		_, err = repositories.FindUserByEmail(c, db, email)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+
+		postIDParam := c.Param("postID")
+		postID, err := uuid.Parse(postIDParam)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid post ID"})
+			return
+		}
+
+		post, err := repositories.GetPostWithDetails(c, db, postID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get post"})
+			return
+		}
+
+		c.JSON(http.StatusOK, post)
+	}
+}
