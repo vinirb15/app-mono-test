@@ -26,7 +26,8 @@ func main() {
 		})
 	})
 	router.GET("/feed", handlers.FeedHandler(db, cfg))
-	router.POST("/post", handlers.CreatePostHandler(db, cfg))
+	router.POST("/posts", handlers.CreatePostHandler(db, cfg))
+	router.PUT("/posts/:postID", handlers.UpdatePostHandler(db, cfg))
 
 	log.Printf("listening on %s\n", cfg.ListenAddr)
 	if err := router.Run(cfg.ListenAddr); err != nil {
