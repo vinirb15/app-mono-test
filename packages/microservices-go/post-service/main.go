@@ -7,6 +7,7 @@ import (
 	"github.com/leandro-andrade-candido/post-service/config"
 	"github.com/leandro-andrade-candido/post-service/database"
 	"github.com/leandro-andrade-candido/post-service/handlers"
+	"github.com/leandro-andrade-candido/post-service/middleware"
 )
 
 func main() {
@@ -25,9 +26,9 @@ func main() {
 			"message": "healthy",
 		})
 	})
-	router.GET("/feed", handlers.FeedHandler(db, cfg))
-	router.POST("/posts", handlers.CreatePostHandler(db, cfg))
-	router.PUT("/posts/:postID", handlers.UpdatePostHandler(db, cfg))
+	router.GET("/feed", middleware.AuthMiddleware(cfg), handlers.FeedHandler(db, cfg))
+	router.POST("/posts", middleware.AuthMiddleware(cfg), handlers.CreatePostHandler(db, cfg))
+	router.PUT("/posts/:postID", middleware.AuthMiddleware(cfg), handlers.UpdatePostHandler(db, cfg))
 
 	log.Printf("listening on %s\n", cfg.ListenAddr)
 	if err := router.Run(cfg.ListenAddr); err != nil {
