@@ -46,7 +46,11 @@ func FindFeedByUserID(ctx context.Context, db *sql.DB, userID uuid.UUID) ([]mode
 		log.Println("Error querying feed:", err)
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v\n", err)
+		}
+	}()
 
 	var feed []models.FeedPost
 	for rows.Next() {

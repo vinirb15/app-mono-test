@@ -17,7 +17,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("failed to close database: %v", err)
+		}
+	}()
 
 	router := gin.Default()
 

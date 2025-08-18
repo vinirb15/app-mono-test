@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -121,7 +122,11 @@ func GetPostWithDetails(ctx context.Context, db *sql.DB, postID uuid.UUID) (mode
 	if err != nil {
 		return models.PostDetail{}, err
 	}
-	defer likeRows.Close()
+	defer func() {
+		if err := likeRows.Close(); err != nil {
+			log.Printf("failed to close rows: %v\n", err)
+		}
+	}()
 
 	for likeRows.Next() {
 		var l models.LikeResp
@@ -141,7 +146,11 @@ func GetPostWithDetails(ctx context.Context, db *sql.DB, postID uuid.UUID) (mode
 	if err != nil {
 		return models.PostDetail{}, err
 	}
-	defer commentRows.Close()
+	defer func() {
+		if err := commentRows.Close(); err != nil {
+			log.Printf("failed to close rows: %v\n", err)
+		}
+	}()
 
 	for commentRows.Next() {
 		var c models.CommentResp

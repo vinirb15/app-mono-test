@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -12,10 +13,10 @@ import (
 func FindUserByEmail(ctx context.Context, db *sql.DB, email string) (models.User, error) {
 	var u models.User
 	err := db.QueryRowContext(ctx, `
-		SELECT id, email, password_hash, created_at
+		SELECT id, email, username, password_hash, created_at
 		FROM users
 		WHERE email = $1
-	`, email).Scan(&u.ID, &u.Email, &u.PasswordHash, &u.CreatedAt)
+	`, email).Scan(&u.ID, &u.Email, &u.UserName, &u.PasswordHash, &u.CreatedAt)
 	return u, err
 }
 
@@ -47,7 +48,11 @@ func GetFollowers(ctx context.Context, db *sql.DB, userID uuid.UUID) ([]models.F
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v\n", err)
+		}
+	}()
 
 	var followers []models.Follower
 	for rows.Next() {
