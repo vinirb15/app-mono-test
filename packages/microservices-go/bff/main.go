@@ -5,11 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/leandro-andrade-candido/bff/config"
+	_ "github.com/leandro-andrade-candido/bff/docs"
 	"github.com/leandro-andrade-candido/bff/handlers"
 	"github.com/leandro-andrade-candido/bff/middleware"
-
-	// Swagger
-	_ "github.com/leandro-andrade-candido/bff/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )

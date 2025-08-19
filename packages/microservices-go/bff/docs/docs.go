@@ -193,7 +193,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/models.LoginRequest"
                         }
                     }
                 ],
@@ -217,11 +217,28 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Faz logout do usuário",
+                "description": "Faz logout do usuário usando refresh token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "Auth"
                 ],
                 "summary": "Logout user",
+                "parameters": [
+                    {
+                        "description": "Logout payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.LogoutRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "ok",
@@ -358,11 +375,28 @@ const docTemplate = `{
         },
         "/refresh": {
             "post": {
-                "description": "Atualiza token de autenticação",
+                "description": "Atualiza o access token usando refresh token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "Auth"
                 ],
                 "summary": "Refresh token",
+                "parameters": [
+                    {
+                        "description": "Refresh payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RefreshRequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -378,7 +412,7 @@ const docTemplate = `{
         },
         "/signup": {
             "post": {
-                "description": "Cadastra novo usuário",
+                "description": "Cria novo usuário",
                 "consumes": [
                     "application/json"
                 ],
@@ -396,7 +430,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "$ref": "#/definitions/models.SignupRequest"
                         }
                     }
                 ],
@@ -404,7 +438,10 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/models.User"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -526,6 +563,32 @@ const docTemplate = `{
                 }
             }
         },
+        "models.LoginRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.LogoutRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Post": {
             "type": "object",
             "properties": {
@@ -577,6 +640,36 @@ const docTemplate = `{
                     }
                 },
                 "user_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RefreshRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SignupRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
                     "type": "string"
                 },
                 "username": {

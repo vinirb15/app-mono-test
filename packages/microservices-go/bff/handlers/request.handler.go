@@ -1,84 +1,116 @@
 package handlers
 
 import (
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/leandro-andrade-candido/bff/models"
 )
 
-// -------------------- Proxy interno --------------------
+// -------------------- Proxy genérico --------------------
+func ProxyHandler(cfg models.Config) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var target string
 
-func ProxyHandler(c *gin.Context, serviceURL string) {
-	// Aqui você implementa o proxy real
-	c.JSON(http.StatusOK, gin.H{"proxy_to": serviceURL})
+		path := c.FullPath()
+		switch {
+		case strings.HasPrefix(path, "/login"),
+			strings.HasPrefix(path, "/logout"),
+			strings.HasPrefix(path, "/signup"),
+			strings.HasPrefix(path, "/refresh"):
+			target = cfg.AuthServiceURL
+		case strings.HasPrefix(path, "/me"),
+			strings.HasPrefix(path, "/followers"):
+			target = cfg.ProfileServiceURL
+		case strings.HasPrefix(path, "/feed"),
+			strings.HasPrefix(path, "/posts"),
+			strings.HasPrefix(path, "/likes"),
+			strings.HasPrefix(path, "/comments"):
+			target = cfg.PostServiceURL
+		default:
+			c.JSON(http.StatusNotFound, gin.H{"error": "route not mapped"})
+			return
+		}
+
+		url := target + c.Request.URL.Path
+
+		req, err := http.NewRequest(c.Request.Method, url, c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create request"})
+			return
+		}
+
+		for k, v := range c.Request.Header {
+			req.Header[k] = v
+		}
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			c.JSON(http.StatusBadGateway, gin.H{"error": "service unavailable"})
+			return
+		}
+		defer resp.Body.Close()
+
+		body, _ := io.ReadAll(resp.Body)
+		c.Data(resp.StatusCode, resp.Header.Get("Content-Type"), body)
+	}
 }
 
 // -------------------- Auth Handlers --------------------
 
-// LoginHandler godoc
 // @Summary Login user
 // @Description Faz login do usuário
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param body body models.User true "Login payload"
+// @Param body body models.LoginRequest true "Login payload"
 // @Success 200 {object} map[string]string
 // @Router /login [post]
 func LoginHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req models.User
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ProxyHandler(c, cfg.AuthServiceURL+"/login")
-	}
+	return ProxyHandler(cfg)
 }
 
 // LogoutHandler godoc
 // @Summary Logout user
-// @Description Faz logout do usuário
+// @Description Faz logout do usuário usando refresh token
 // @Tags Auth
 // @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param body body models.LogoutRequest true "Logout payload"
 // @Success 200 {string} string "ok"
 // @Router /logout [post]
 func LogoutHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ProxyHandler(c, cfg.AuthServiceURL+"/logout")
-	}
+	return ProxyHandler(cfg)
 }
 
 // SignupHandler godoc
 // @Summary Signup user
-// @Description Cadastra novo usuário
+// @Description Cria novo usuário
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param body body models.User true "Signup payload"
-// @Success 201 {object} models.User
+// @Param body body models.SignupRequest true "Signup payload"
+// @Success 201 {object} map[string]string
 // @Router /signup [post]
 func SignupHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req models.User
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ProxyHandler(c, cfg.AuthServiceURL+"/signup")
-	}
+	return ProxyHandler(cfg)
 }
 
 // RefreshHandler godoc
 // @Summary Refresh token
-// @Description Atualiza token de autenticação
+// @Description Atualiza o access token usando refresh token
 // @Tags Auth
+// @Accept json
+// @Produce json
+// @Param body body models.RefreshRequest true "Refresh payload"
 // @Success 200 {object} map[string]string
 // @Router /refresh [post]
 func RefreshHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ProxyHandler(c, cfg.AuthServiceURL+"/refresh")
-	}
+	return ProxyHandler(cfg)
 }
 
 // -------------------- Profile Handlers --------------------
@@ -91,9 +123,7 @@ func RefreshHandler(cfg models.Config) gin.HandlerFunc {
 // @Success 200 {object} models.User
 // @Router /me [get]
 func MeHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ProxyHandler(c, cfg.ProfileServiceURL+"/me")
-	}
+	return ProxyHandler(cfg)
 }
 
 // GetFollowersHandler godoc
@@ -105,10 +135,7 @@ func MeHandler(cfg models.Config) gin.HandlerFunc {
 // @Success 200 {array} models.Follower
 // @Router /followers/{user_id} [get]
 func GetFollowersHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userID := c.Param("user_id")
-		ProxyHandler(c, cfg.ProfileServiceURL+"/followers/"+userID)
-	}
+	return ProxyHandler(cfg)
 }
 
 // FollowUserHandler godoc
@@ -120,14 +147,7 @@ func GetFollowersHandler(cfg models.Config) gin.HandlerFunc {
 // @Success 201 {object} models.Follower
 // @Router /followers [post]
 func FollowUserHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req models.Follower
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ProxyHandler(c, cfg.ProfileServiceURL+"/followers")
-	}
+	return ProxyHandler(cfg)
 }
 
 // -------------------- Posts Handlers --------------------
@@ -140,9 +160,7 @@ func FollowUserHandler(cfg models.Config) gin.HandlerFunc {
 // @Success 200 {array} models.FeedPost
 // @Router /feed [get]
 func GetFeedHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ProxyHandler(c, cfg.PostServiceURL+"/feed")
-	}
+	return ProxyHandler(cfg)
 }
 
 // CreatePostHandler godoc
@@ -154,14 +172,7 @@ func GetFeedHandler(cfg models.Config) gin.HandlerFunc {
 // @Success 201 {object} models.Post
 // @Router /posts [post]
 func CreatePostHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req models.Post
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ProxyHandler(c, cfg.PostServiceURL+"/posts")
-	}
+	return ProxyHandler(cfg)
 }
 
 // GetPostHandler godoc
@@ -173,10 +184,7 @@ func CreatePostHandler(cfg models.Config) gin.HandlerFunc {
 // @Success 200 {object} models.PostDetail
 // @Router /posts/{post_id} [get]
 func GetPostHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		postID := c.Param("post_id")
-		ProxyHandler(c, cfg.PostServiceURL+"/posts/"+postID)
-	}
+	return ProxyHandler(cfg)
 }
 
 // UpdatePostHandler godoc
@@ -189,15 +197,7 @@ func GetPostHandler(cfg models.Config) gin.HandlerFunc {
 // @Success 200 {object} models.Post
 // @Router /posts/{post_id} [put]
 func UpdatePostHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		postID := c.Param("post_id")
-		var req models.Post
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ProxyHandler(c, cfg.PostServiceURL+"/posts/"+postID)
-	}
+	return ProxyHandler(cfg)
 }
 
 // LikePostHandler godoc
@@ -209,14 +209,7 @@ func UpdatePostHandler(cfg models.Config) gin.HandlerFunc {
 // @Success 201 {object} models.Like
 // @Router /likes [post]
 func LikePostHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req models.Like
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ProxyHandler(c, cfg.PostServiceURL+"/likes")
-	}
+	return ProxyHandler(cfg)
 }
 
 // CommentPostHandler godoc
@@ -228,12 +221,5 @@ func LikePostHandler(cfg models.Config) gin.HandlerFunc {
 // @Success 201 {object} models.Comment
 // @Router /comments [post]
 func CommentPostHandler(cfg models.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var req models.Comment
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ProxyHandler(c, cfg.PostServiceURL+"/comments")
-	}
+	return ProxyHandler(cfg)
 }

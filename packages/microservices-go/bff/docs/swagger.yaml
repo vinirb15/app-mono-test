@@ -74,6 +74,23 @@ definitions:
       user_id:
         type: string
     type: object
+  models.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
   models.Post:
     properties:
       caption:
@@ -111,6 +128,26 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  models.RefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  models.SignupRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - password
+    - username
     type: object
   models.User:
     properties:
@@ -242,7 +279,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/models.User'
+          $ref: '#/definitions/models.LoginRequest'
       produces:
       - application/json
       responses:
@@ -257,7 +294,18 @@ paths:
       - Auth
   /logout:
     post:
-      description: Faz logout do usuário
+      consumes:
+      - application/json
+      description: Faz logout do usuário usando refresh token
+      parameters:
+      - description: Logout payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.LogoutRequest'
+      produces:
+      - application/json
       responses:
         "200":
           description: ok
@@ -346,7 +394,18 @@ paths:
       - Posts
   /refresh:
     post:
-      description: Atualiza token de autenticação
+      consumes:
+      - application/json
+      description: Atualiza o access token usando refresh token
+      parameters:
+      - description: Refresh payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshRequest'
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -361,21 +420,23 @@ paths:
     post:
       consumes:
       - application/json
-      description: Cadastra novo usuário
+      description: Cria novo usuário
       parameters:
       - description: Signup payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/models.User'
+          $ref: '#/definitions/models.SignupRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/models.User'
+            additionalProperties:
+              type: string
+            type: object
       summary: Signup user
       tags:
       - Auth
