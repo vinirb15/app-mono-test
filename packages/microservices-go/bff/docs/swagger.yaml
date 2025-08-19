@@ -1,0 +1,387 @@
+basePath: /
+definitions:
+  models.Comment:
+    properties:
+      commented_at:
+        type: string
+      id:
+        type: string
+      post_id:
+        type: string
+      text:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.CommentResp:
+    properties:
+      commented_at:
+        type: string
+      id:
+        type: string
+      text:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.FeedPost:
+    properties:
+      caption:
+        type: string
+      comment_count:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      like_count:
+        type: integer
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.Follower:
+    properties:
+      created_at:
+        type: string
+      following_id:
+        type: string
+      id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.Like:
+    properties:
+      id:
+        type: string
+      liked_at:
+        type: string
+      post_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.LikeResp:
+    properties:
+      id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.Post:
+    properties:
+      caption:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.PostDetail:
+    properties:
+      caption:
+        type: string
+      comments:
+        items:
+          $ref: '#/definitions/models.CommentResp'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      likes:
+        items:
+          $ref: '#/definitions/models.LikeResp'
+        type: array
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      password_hash:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+    required:
+    - email
+    - username
+    type: object
+host: localhost:8084
+info:
+  contact: {}
+  description: API Gateway / BFF que proxy requests para Auth, Profile e Post Services.
+  title: BFF API
+  version: "1.0"
+paths:
+  /comments:
+    post:
+      description: Comenta em um post
+      parameters:
+      - description: Comment payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Comment'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Comment'
+      security:
+      - BearerAuth: []
+      summary: Comment on post
+      tags:
+      - Posts
+  /feed:
+    get:
+      description: Retorna feed do usuário
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.FeedPost'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get feed
+      tags:
+      - Posts
+  /followers:
+    post:
+      description: Segue um usuário
+      parameters:
+      - description: Follow payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Follower'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Follower'
+      security:
+      - BearerAuth: []
+      summary: Follow a user
+      tags:
+      - Profile
+  /followers/{user_id}:
+    get:
+      description: Lista seguidores de um usuário
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Follower'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: Get followers
+      tags:
+      - Profile
+  /likes:
+    post:
+      description: Marca um post como curtido
+      parameters:
+      - description: Like payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Like'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Like'
+      security:
+      - BearerAuth: []
+      summary: Like a post
+      tags:
+      - Posts
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Faz login do usuário
+      parameters:
+      - description: Login payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+      tags:
+      - Auth
+  /logout:
+    post:
+      description: Faz logout do usuário
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Logout user
+      tags:
+      - Auth
+  /me:
+    get:
+      description: Retorna informações do usuário logado
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - Profile
+  /posts:
+    post:
+      description: Cria um novo post
+      parameters:
+      - description: Post payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Post'
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Post'
+      security:
+      - BearerAuth: []
+      summary: Create post
+      tags:
+      - Posts
+  /posts/{post_id}:
+    get:
+      description: Retorna post pelo ID
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.PostDetail'
+      security:
+      - BearerAuth: []
+      summary: Get post by ID
+      tags:
+      - Posts
+    put:
+      description: Atualiza um post
+      parameters:
+      - description: Post ID
+        in: path
+        name: post_id
+        required: true
+        type: string
+      - description: Post payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.Post'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Post'
+      security:
+      - BearerAuth: []
+      summary: Update post
+      tags:
+      - Posts
+  /refresh:
+    post:
+      description: Atualiza token de autenticação
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh token
+      tags:
+      - Auth
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Cadastra novo usuário
+      parameters:
+      - description: Signup payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+      summary: Signup user
+      tags:
+      - Auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
