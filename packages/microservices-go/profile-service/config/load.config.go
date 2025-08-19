@@ -21,7 +21,7 @@ func LoadConfig() models.Config {
 
 	addr := os.Getenv("ADDR")
 	if addr == "" {
-		addr = ":8080"
+		addr = ":8082"
 	}
 
 	access := 15 * time.Minute
