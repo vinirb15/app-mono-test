@@ -16,7 +16,7 @@ import (
 func FindUserByID(ctx context.Context, cfg models.Config, id uuid.UUID) (models.User, error) {
 	var u models.User
 
-	url := fmt.Sprintf("%s/user/%s", cfg.ProfileServiceURL, id.String())
+	url := fmt.Sprintf("%s/user/id/%s", cfg.ProfileServiceURL, id.String())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {

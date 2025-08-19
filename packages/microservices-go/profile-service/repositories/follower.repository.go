@@ -20,6 +20,16 @@ func FindUserByEmail(ctx context.Context, db *sql.DB, email string) (models.User
 	return u, err
 }
 
+func FindUserById(ctx context.Context, db *sql.DB, id string) (models.User, error) {
+	var u models.User
+	err := db.QueryRowContext(ctx, `
+		SELECT id, email, username, password_hash, created_at
+		FROM users
+		WHERE id = $1
+	`, id).Scan(&u.ID, &u.Email, &u.UserName, &u.PasswordHash, &u.CreatedAt)
+	return u, err
+}
+
 func FollowUser(ctx context.Context, db *sql.DB, userID, followingID uuid.UUID) (models.Follower, error) {
 	follower := models.Follower{
 		ID:          uuid.New(),

@@ -68,3 +68,23 @@ func GetUserByEmailHandler(db *sql.DB) gin.HandlerFunc {
 		})
 	}
 }
+
+func GetUserByIdHandler(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		user, err := repositories.FindUserById(c, db, id)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+
+		c.JSON(http.StatusOK, models.User{
+			ID:           user.ID,
+			Email:        user.Email,
+			UserName:     user.UserName,
+			PasswordHash: user.PasswordHash,
+			CreatedAt:    user.CreatedAt,
+		})
+	}
+}
