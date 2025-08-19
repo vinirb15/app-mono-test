@@ -41,3 +41,13 @@ func AuthMiddleware(cfg models.Config) gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func AddBearerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		auth := c.GetHeader("Authorization")
+		if auth != "" && !strings.HasPrefix(auth, "Bearer ") {
+			c.Request.Header.Set("Authorization", "Bearer "+auth)
+		}
+		c.Next()
+	}
+}

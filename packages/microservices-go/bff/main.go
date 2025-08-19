@@ -25,6 +25,7 @@ func main() {
 	router := gin.Default()
 
 	// Swagger UI
+	router.Use(middleware.AddBearerMiddleware())
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Health check
