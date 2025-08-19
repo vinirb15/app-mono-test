@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   db:
     image: postgres:16
@@ -13,3 +14,71 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  bff:
+    build:
+      context: ./bff
+      dockerfile: Dockerfile
+    container_name: bff
+    ports:
+      - "8080:8080"
+    environment:
+      ADDR: ":8080"
+      AUTH_SERVICE_URL: http://auth:8083
+      POST_SERVICE_URL: http://post:8081
+      PROFILE_SERVICE_URL: http://profile:8082
+    depends_on:
+      - auth
+      - post
+      - profile
+
+  auth:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth
+    ports:
+      - "8083:8083"
+    environment:
+      JWT_SECRET: "secret_key"
+      ADDR: ":8083"
+      ACCESS_TTL: "15m"
+      REFRESH_TTL: "168h"
+      DATABASE_URL: "postgres://postgres:postgres@db:5432/dialog?sslmode=disable"
+      PROFILE_SERVICE_URL: http://profile:8082
+    depends_on:
+      - profile
+
+  post:
+    build:
+      context: ./post-service
+      dockerfile: Dockerfile
+    container_name: post
+    ports:
+      - "8081:8081"
+    environment:
+      JWT_SECRET: "secret_key"
+      DATABASE_URL: "postgres://postgres:postgres@db:5432/dialog?sslmode=disable"
+      ADDR: ":8081"
+      ACCESS_TTL: "15m"
+      REFRESH_TTL: "168h"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  profile:
+    build:
+      context: ./profile-service
+      dockerfile: Dockerfile
+    container_name: profile
+    ports:
+      - "8082:8082"
+    environment:
+      JWT_SECRET: "secret_key"
+      DATABASE_URL: "postgres://postgres:postgres@db:5432/dialog?sslmode=disable"
+      ADDR: ":8082"
+      ACCESS_TTL: "15m"
+      REFRESH_TTL: "168h"
+    depends_on:
+      db:
+        condition: service_healthy

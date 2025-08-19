@@ -51,8 +51,6 @@ func FindUserByEmail(ctx context.Context, cfg models.Config, email string) (mode
 		return u, fmt.Errorf("erro ao gerar access token: %w", err)
 	}
 
-	fmt.Println("Access Token:", access)
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return u, err

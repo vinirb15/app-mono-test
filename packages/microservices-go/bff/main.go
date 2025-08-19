@@ -61,7 +61,7 @@ func main() {
 	router.POST("/likes", middleware.AuthMiddleware(cfg), handlers.LikePostHandler(cfg))
 	router.POST("/comments", middleware.AuthMiddleware(cfg), handlers.CommentPostHandler(cfg))
 
-	log.Printf("listening on %s\n", cfg.ListenAddr)
+	log.Printf("listening ons %s\n", cfg.ListenAddr)
 	if err := router.Run(cfg.ListenAddr); err != nil {
 		log.Fatal(err)
 	}

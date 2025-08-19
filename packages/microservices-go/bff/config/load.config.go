@@ -14,7 +14,7 @@ func LoadConfig() models.Config {
 
 	addr := os.Getenv("ADDR")
 	if addr == "" {
-		addr = ":8084"
+		addr = ":8080"
 	}
 
 	profileService := os.Getenv("PROFILE_SERVICE_URL")
@@ -29,7 +29,7 @@ func LoadConfig() models.Config {
 
 	authService := os.Getenv("AUTH_SERVICE_URL")
 	if authService == "" {
-		authService = "http://localhost:8080"
+		authService = "http://localhost:8083"
 	}
 
 	return models.Config{
