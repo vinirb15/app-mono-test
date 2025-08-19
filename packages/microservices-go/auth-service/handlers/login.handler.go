@@ -10,6 +10,7 @@ import (
 	"github.com/leandro-andrade-candido/auth-service/helpers"
 	"github.com/leandro-andrade-candido/auth-service/models"
 	"github.com/leandro-andrade-candido/auth-service/repositories"
+	"github.com/leandro-andrade-candido/auth-service/services"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,7 +23,7 @@ func LoginHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
 		}
 		req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
-		u, err := repositories.FindUserByEmail(c, db, req.Email)
+		u, err := services.FindUserByEmail(c, cfg, req.Email)
 		if err != nil || bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(req.Password)) != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "credenciais inválidas"})
 			return

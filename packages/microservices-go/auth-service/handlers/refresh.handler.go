@@ -10,6 +10,7 @@ import (
 	"github.com/leandro-andrade-candido/auth-service/helpers"
 	"github.com/leandro-andrade-candido/auth-service/models"
 	"github.com/leandro-andrade-candido/auth-service/repositories"
+	"github.com/leandro-andrade-candido/auth-service/services"
 )
 
 func RefreshHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
@@ -42,7 +43,7 @@ func RefreshHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
 			return
 		}
 
-		u, err := repositories.FindUserByID(c, db, rt.UserID)
+		u, err := services.FindUserByID(c, cfg, rt.UserID)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "usuário inválido"})
 			return

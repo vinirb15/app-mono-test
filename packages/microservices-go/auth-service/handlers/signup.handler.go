@@ -10,11 +10,11 @@ import (
 	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/leandro-andrade-candido/auth-service/models"
-	"github.com/leandro-andrade-candido/auth-service/repositories"
+	"github.com/leandro-andrade-candido/auth-service/services"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SignupHandler(db *sql.DB) gin.HandlerFunc {
+func SignupHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req models.SignupReq
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -24,7 +24,7 @@ func SignupHandler(db *sql.DB) gin.HandlerFunc {
 		req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 		req.UserName = strings.ToLower(strings.TrimSpace(req.UserName))
 
-		if _, err := repositories.FindUserByEmail(c, db, req.Email); err == nil {
+		if _, err := services.FindUserByEmail(c, cfg, req.Email); err == nil {
 			c.JSON(http.StatusConflict, gin.H{"error": "email já cadastrado"})
 			return
 		}

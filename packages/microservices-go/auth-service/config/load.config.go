@@ -24,6 +24,11 @@ func LoadConfig() models.Config {
 		addr = ":8080"
 	}
 
+	profileService := os.Getenv("PROFILE_SERVICE_URL")
+	if profileService == "" {
+		profileService = "http://localhost:8082"
+	}
+
 	access := 15 * time.Minute
 	if v := os.Getenv("ACCESS_TTL"); v != "" {
 		if d, err := time.ParseDuration(v); err == nil {
@@ -38,10 +43,11 @@ func LoadConfig() models.Config {
 		}
 	}
 	return models.Config{
-		JWTSecret:  []byte(secret),
-		AccessTTL:  access,
-		RefreshTTL: refresh,
-		DSN:        dsn,
-		ListenAddr: addr,
+		JWTSecret:         []byte(secret),
+		AccessTTL:         access,
+		RefreshTTL:        refresh,
+		DSN:               dsn,
+		ListenAddr:        addr,
+		ProfileServiceURL: profileService,
 	}
 }

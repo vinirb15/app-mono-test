@@ -18,6 +18,7 @@ type LoginReq struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
+
 type TokenResp struct {
 	AccessToken           string    `json:"access_token"`
 	AccessTokenExpiresAt  time.Time `json:"access_token_expires_at"`
@@ -27,18 +28,19 @@ type TokenResp struct {
 }
 
 type Config struct {
-	JWTSecret  []byte
-	AccessTTL  time.Duration
-	RefreshTTL time.Duration
-	DSN        string
-	ListenAddr string
+	JWTSecret         []byte
+	AccessTTL         time.Duration
+	RefreshTTL        time.Duration
+	DSN               string
+	ListenAddr        string
+	ProfileServiceURL string
 }
 
 type User struct {
 	ID           uuid.UUID `json:"user_id"`
 	Email        string    `json:"email" binding:"required,email"`
 	UserName     string    `json:"username" binding:"required"`
-	PasswordHash string    `json:"-"`
+	PasswordHash string    `json:"password_hash"`
 	CreatedAt    time.Time `json:"created_at"`
 }
 

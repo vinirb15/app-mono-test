@@ -10,7 +10,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/leandro-andrade-candido/auth-service/helpers"
 	"github.com/leandro-andrade-candido/auth-service/models"
-	"github.com/leandro-andrade-candido/auth-service/repositories"
+	"github.com/leandro-andrade-candido/auth-service/services"
 )
 
 func MeHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
@@ -34,7 +34,7 @@ func MeHandler(db *sql.DB, cfg models.Config) gin.HandlerFunc {
 			return
 		}
 
-		user, err := repositories.FindUserByEmail(c, db, email)
+		user, err := services.FindUserByEmail(c, cfg, email)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 			return

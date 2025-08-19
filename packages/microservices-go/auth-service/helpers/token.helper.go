@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/leandro-andrade-candido/auth-service/models"
 )
@@ -16,18 +17,24 @@ import (
 func GenerateAccessToken(cfg models.Config, u models.User) (string, time.Time, error) {
 	now := time.Now().UTC()
 	exp := now.Add(cfg.AccessTTL)
+
 	claims := models.JWTClaims{
-		UserID: u.ID.String(),
-		Email:  u.Email,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "authsvc",
-			Subject:   u.ID.String(),
 			IssuedAt:  jwt.NewNumericDate(now),
 			ExpiresAt: jwt.NewNumericDate(exp),
 		},
 	}
+
+	if u.ID != uuid.Nil {
+		claims.UserID = u.ID.String()
+		claims.Email = u.Email
+		claims.Subject = u.ID.String()
+	}
+
 	tk := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	s, err := tk.SignedString(cfg.JWTSecret)
+
 	return s, exp, err
 }
 

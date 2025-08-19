@@ -31,7 +31,7 @@ func main() {
 		})
 	})
 
-	router.POST("/signup", handlers.SignupHandler(db))
+	router.POST("/signup", handlers.SignupHandler(db, cfg))
 	router.POST("/login", handlers.LoginHandler(db, cfg))
 	router.POST("/refresh", handlers.RefreshHandler(db, cfg))
 	router.POST("/logout", handlers.LogoutHandler(db))
