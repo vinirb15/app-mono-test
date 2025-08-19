@@ -32,6 +32,7 @@ func main() {
 	})
 
 	router.GET("/me", middleware.AuthMiddleware(cfg), handlers.MeHandler(db, cfg))
+	router.GET("/user/:email", handlers.GetUserByEmailHandler(db))
 	router.POST("/followers", middleware.AuthMiddleware(cfg), handlers.FollowUserHandler(db, cfg))
 	router.GET("/followers/:userID", middleware.AuthMiddleware(cfg), handlers.GetFollowersHandler(db))
 

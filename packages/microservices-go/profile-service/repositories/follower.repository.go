@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -17,6 +18,8 @@ func FindUserByEmail(ctx context.Context, db *sql.DB, email string) (models.User
 		FROM users
 		WHERE email = $1
 	`, email).Scan(&u.ID, &u.Email, &u.UserName, &u.PasswordHash, &u.CreatedAt)
+	fmt.Println("FindUserByEmail executed with email:", email)
+	fmt.Println("User found:", u)
 	return u, err
 }
 
